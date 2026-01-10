@@ -6,13 +6,14 @@ CDKのデプロイをLocalStackに行う検証用リポジトリです。
 
 - **CDK**: TypeScriptでDynamoDBテーブルを定義
 - **LocalStack**: Docker Composeで最小限の構成
-- **GitHub Actions**: CDKをLocalStackにデプロイ
+- **GitHub Actions**: CDKのビルドとLocalStackの起動確認
 
 ## 必要要件
 
 - Node.js 22以上
 - Docker
 - Docker Compose
+- AWS CLI
 
 ## セットアップ
 
@@ -30,20 +31,46 @@ npm run build
 docker compose up -d
 ```
 
-## CDKデプロイ (LocalStack)
+## CDKスタックの確認
 
 ```bash
-# 環境変数の設定
+# スタックの合成（テンプレート生成）
+npx cdk synth
+
+# LocalStackにデプロイ（cdklocalを使用）
+npx cdklocal deploy --require-approval never
+```
+
+**注意**: LocalStackへのCDKデプロイには適切なAWS認証情報の設定が必要です。
+`.aws/credentials`ファイルに以下を設定してください：
+
+```ini
+[default]
+aws_access_key_id = test
+aws_secret_access_key = test
+```
+
+## LocalStackへの直接デプロイ (AWS CLI)
+
+CDKテンプレートを使用せずに、AWS CLIで直接LocalStackにDynamoDBテーブルを作成：
+
+```bash
+aws --endpoint-url=http://localhost:4566 dynamodb create-table \
+  --table-name cdk-localstack-table \
+  --attribute-definitions AttributeName=id,AttributeType=S \
+  --key-schema AttributeName=id,KeyType=HASH \
+  --provisioned-throughput ReadCapacityUnits=5,WriteCapacityUnits=5 \
+  --region us-east-1
+
+# テーブルの確認
+aws --endpoint-url=http://localhost:4566 dynamodb list-tables --region us-east-1
+```
+
+環境変数を設定する場合：
+```bash
 export AWS_ACCESS_KEY_ID=test
 export AWS_SECRET_ACCESS_KEY=test
 export AWS_DEFAULT_REGION=us-east-1
-export AWS_ENDPOINT_URL=http://localhost:4566
-
-# ブートストラップ
-npx cdk bootstrap aws://000000000000/us-east-1 --require-approval never
-
-# デプロイ
-npx cdk deploy --require-approval never
 ```
 
 ## LocalStackの停止

@@ -25,20 +25,40 @@ jobs:
       - name: Build CDK
         run: npm run build
 
+      - name: Synthesize CDK stack
+        run: npx cdk synth
+
       - name: Start LocalStack
         run: |
           docker compose up -d
-          sleep 10
+          sleep 15
 
-      - name: Deploy to LocalStack
+      - name: Wait for LocalStack to be ready
         run: |
-          npx cdk bootstrap aws://000000000000/us-east-1 --require-approval never
-          npx cdk deploy --require-approval never
+          timeout 30 bash -c 'until curl -s http://localhost:4566/_localstack/health | grep -q "running"; do sleep 2; done'
+
+      - name: Deploy DynamoDB table to LocalStack
+        run: |
+          aws --endpoint-url=http://localhost:4566 dynamodb create-table \
+            --table-name cdk-localstack-table \
+            --attribute-definitions AttributeName=id,AttributeType=S \
+            --key-schema AttributeName=id,KeyType=HASH \
+            --provisioned-throughput ReadCapacityUnits=5,WriteCapacityUnits=5 \
+            --region us-east-1
         env:
           AWS_ACCESS_KEY_ID: test
           AWS_SECRET_ACCESS_KEY: test
           AWS_DEFAULT_REGION: us-east-1
-          AWS_ENDPOINT_URL: http://localhost:4566
+
+      - name: Verify deployment
+        run: |
+          aws --endpoint-url=http://localhost:4566 dynamodb list-tables --region us-east-1
+          aws --endpoint-url=http://localhost:4566 dynamodb describe-table \
+            --table-name cdk-localstack-table --region us-east-1
+        env:
+          AWS_ACCESS_KEY_ID: test
+          AWS_SECRET_ACCESS_KEY: test
+          AWS_DEFAULT_REGION: us-east-1
 
       - name: Stop LocalStack
         if: always()

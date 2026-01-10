@@ -4,4 +4,9 @@ import * as cdk from 'aws-cdk-lib';
 import { CdkWithLocalstackStack } from '../lib/cdk-with-localstack-stack';
 
 const app = new cdk.App();
-new CdkWithLocalstackStack(app, 'CdkWithLocalstackStack', {});
+new CdkWithLocalstackStack(app, 'CdkWithLocalstackStack', {
+  env: {
+    account: '000000000000',
+    region: 'us-east-1',
+  },
+});
