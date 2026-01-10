@@ -25,11 +25,15 @@ jobs:
         with:
           node-version: '22'
 
+      # - name: Start LocalStack
+      #   uses: LocalStack/setup-localstack@main
+      #   with:
+      #     image-tag: 'latest'
+      #     install-awslocal: false
+
       - name: Start LocalStack
-        uses: LocalStack/setup-localstack@main
-        with:
-          image-tag: 'latest'
-          install-awslocal: false
+        run: |
+          docker compose up -d
 
       - name: Install dependencies
         run: |
