@@ -25,10 +25,11 @@ jobs:
         uses: LocalStack/setup-localstack@main
         with:
           image-tag: 'latest'
-          install-awslocal: 'true'
 
       - name: Install dependencies
-        run: npm install
+        run: |
+          npm install
+          pip install awslocal
 
       - name: Build CDK
         run: npm run build
