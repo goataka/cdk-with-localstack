@@ -21,10 +21,35 @@ jobs:
         with:
           node-version: '22'
 
+      - name: Show environment before LocalStack
+        run: |
+          echo "=== Environment variables before LocalStack ==="
+          env | sort
+          echo ""
+          echo "=== Docker containers before LocalStack ==="
+          docker ps -a
+          echo ""
+          echo "=== Network ports before LocalStack ==="
+          netstat -tuln | grep LISTEN || true
+
       - name: Start LocalStack
         uses: LocalStack/setup-localstack@main
         with:
           image-tag: 'latest'
+
+      - name: Show environment after LocalStack
+        run: |
+          echo "=== Environment variables after LocalStack ==="
+          env | sort
+          echo ""
+          echo "=== Docker containers after LocalStack ==="
+          docker ps -a
+          echo ""
+          echo "=== Network ports after LocalStack ==="
+          netstat -tuln | grep LISTEN || true
+          echo ""
+          echo "=== LocalStack health check ==="
+          curl -s http://localhost:4566/_localstack/health || true
 
       - name: Install dependencies
         run: |
