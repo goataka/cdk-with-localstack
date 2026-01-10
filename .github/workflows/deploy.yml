@@ -27,8 +27,18 @@ jobs:
       - name: Build CDK
         run: npm run build
 
-      - name: Synthesize CDK stack
-        run: npx cdk synth
+      - name: Configure AWS credentials for LocalStack
+        run: |
+          mkdir -p ~/.aws
+          cat > ~/.aws/credentials << 'EOF'
+          [default]
+          aws_access_key_id = test
+          aws_secret_access_key = test
+          EOF
+          cat > ~/.aws/config << 'EOF'
+          [default]
+          region = us-east-1
+          EOF
 
       - name: Start LocalStack
         run: |
@@ -39,14 +49,8 @@ jobs:
         run: |
           timeout 30 bash -c 'until curl -s http://localhost:4566/_localstack/health | grep -q "running"; do sleep 2; done'
 
-      - name: Deploy DynamoDB table to LocalStack
-        run: |
-          aws --endpoint-url=http://localhost:4566 dynamodb create-table \
-            --table-name cdk-localstack-table \
-            --attribute-definitions AttributeName=id,AttributeType=S \
-            --key-schema AttributeName=id,KeyType=HASH \
-            --provisioned-throughput ReadCapacityUnits=5,WriteCapacityUnits=5 \
-            --region us-east-1
+      - name: Deploy to LocalStack with CDK
+        run: npx cdklocal deploy --require-approval never
         env:
           AWS_ACCESS_KEY_ID: test
           AWS_SECRET_ACCESS_KEY: test
