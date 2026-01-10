@@ -44,13 +44,30 @@ jobs:
 
       - name: Deploy to LocalStack with CDK
         run: |
-          curl http://localhost:4566/_localstack/health
+          # キャッシュディレクトリを作成
+          mkdir -p /home/runner/.cdk/cache
+          
+          # LocalStackの起動を待つ
+          echo "Waiting for LocalStack..."
+          for i in {1..30}; do
+            if curl -s http://localhost:4566/_localstack/health | grep -q "dynamodb"; then
+              echo "LocalStack is ready!"
+              break
+            fi
+            echo "Attempt $i/30: LocalStack not ready yet..."
+            sleep 2
+          done
+          
+          # ヘルスチェック結果を表示
+          curl -s http://localhost:4566/_localstack/health | jq . 
+        
           export AWS_ACCESS_KEY_ID="test"
           export AWS_SECRET_ACCESS_KEY="test"
           export AWS_DEFAULT_REGION="us-east-1"
           export AWS_ENDPOINT_URL="http://localhost:4566" 
           export CDK_DEFAULT_ACCOUNT="000000000000"
           export CDK_DEFAULT_REGION="us-east-1"
+
           npx cdklocal bootstrap --verbose
           npx cdklocal deploy --require-approval never --verbose
 
