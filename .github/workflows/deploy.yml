@@ -34,6 +34,8 @@ jobs:
       - name: Start LocalStack
         run: |
           docker compose up -d
+          pip install localstack
+          localstack wait -t 60
 
       - name: Install dependencies
         run: |
@@ -47,6 +49,7 @@ jobs:
           export AWS_ACCESS_KEY_ID="test"
           export AWS_SECRET_ACCESS_KEY="test"
           export AWS_DEFAULT_REGION="us-east-1"
+          export AWS_ENDPOINT_URL="http://localhost:4566" 
           export CDK_DEFAULT_ACCOUNT="000000000000"
           export CDK_DEFAULT_REGION="us-east-1"
           npx cdklocal bootstrap
