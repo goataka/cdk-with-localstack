@@ -1,0 +1,74 @@
+name: Deploy CDK to LocalStack
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Show environment before LocalStack
+        run: |
+          echo "=== Environment variables before LocalStack ==="
+          env | sort
+          echo ""
+          echo "=== Docker containers before LocalStack ==="
+          docker ps -a
+          echo ""
+          echo "=== Network ports before LocalStack ==="
+          netstat -tuln | grep LISTEN || true
+
+      - name: Start LocalStack
+        uses: LocalStack/setup-localstack@main
+        with:
+          image-tag: 'latest'
+
+      - name: Show environment after LocalStack
+        run: |
+          echo "=== Environment variables after LocalStack ==="
+          env | sort
+          echo ""
+          echo "=== Docker containers after LocalStack ==="
+          docker ps -a
+          echo ""
+          echo "=== Network ports after LocalStack ==="
+          netstat -tuln | grep LISTEN || true
+          echo ""
+          echo "=== LocalStack health check ==="
+          curl -s http://localhost:4566/_localstack/health || true
+
+      - name: Install dependencies
+        run: |
+          pip install awscli-local
+          npm install
+
+      - name: Build CDK
+        run: npm run build
+
+      - name: Deploy to LocalStack with CDK
+        run: |
+          export AWS_ACCESS_KEY_ID="test"
+          export AWS_SECRET_ACCESS_KEY="test"
+          export AWS_DEFAULT_REGION="us-east-1"
+          npx cdklocal bootstrap
+          npx cdklocal deploy --require-approval never
+
+      - name: Verify deployment
+        run: |
+          awslocal dynamodb list-tables
+          awslocal dynamodb describe-table --table-name cdk-localstack-table
+
