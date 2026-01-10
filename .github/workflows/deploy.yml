@@ -27,6 +27,9 @@ jobs:
       - name: Build CDK
         run: npm run build
 
+      - name: Install CDK tools globally
+        run: npm install -g aws-cdk-local aws-cdk
+
       - name: Start LocalStack
         run: |
           docker compose up -d
