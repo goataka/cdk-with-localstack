@@ -28,7 +28,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install awslocal
+          pip install awscli-local
           npm install
 
       - name: Build CDK
