@@ -27,19 +27,6 @@ jobs:
       - name: Build CDK
         run: npm run build
 
-      - name: Configure AWS credentials for LocalStack
-        run: |
-          mkdir -p ~/.aws
-          cat > ~/.aws/credentials << 'EOF'
-          [default]
-          aws_access_key_id = test
-          aws_secret_access_key = test
-          EOF
-          cat > ~/.aws/config << 'EOF'
-          [default]
-          region = us-east-1
-          EOF
-
       - name: Start LocalStack
         run: |
           docker compose up -d
@@ -47,7 +34,7 @@ jobs:
 
       - name: Wait for LocalStack to be ready
         run: |
-          timeout 30 bash -c 'until curl -s http://localhost:4566/_localstack/health | grep -q "running"; do sleep 2; done'
+          timeout 60 bash -c 'until curl -s http://localhost:4566/_localstack/health | grep -q "running"; do sleep 2; done'
 
       - name: Deploy to LocalStack with CDK
         run: npx cdklocal deploy --require-approval never
