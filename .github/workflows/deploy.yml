@@ -6,6 +6,10 @@ on:
       - main
   pull_request:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+  
 jobs:
   deploy:
     runs-on: ubuntu-latest
@@ -61,9 +65,9 @@ jobs:
 
       - name: Deploy to LocalStack with CDK
         run: |
-          export AWS_ACCESS_KEY_ID="test"
-          export AWS_SECRET_ACCESS_KEY="test"
-          export AWS_DEFAULT_REGION="us-east-1"
+          # export AWS_ACCESS_KEY_ID="test"
+          # export AWS_SECRET_ACCESS_KEY="test"
+          # export AWS_DEFAULT_REGION="us-east-1"
           npx cdklocal bootstrap
           npx cdklocal deploy --require-approval never
 
