@@ -22,9 +22,19 @@ jobs:
           node-version: '22'
 
       - name: Start LocalStack
-        uses: LocalStack/setup-localstack@main
-        with:
-          image-tag: 'latest'
+        run: docker compose up -d
+
+      - name: Wait for LocalStack to be ready
+        run: |
+          echo "Waiting for LocalStack to be ready..."
+          timeout 60 bash -c '
+            until curl -f -s http://localhost:4566/_localstack/health > /dev/null 2>&1; do 
+              echo "LocalStack not ready yet, waiting..."
+              sleep 5
+            done
+          '
+          echo "LocalStack is ready!"
+          curl -s http://localhost:4566/_localstack/health || true
 
       - name: Install dependencies
         run: |
@@ -46,4 +56,8 @@ jobs:
         run: |
           awslocal dynamodb list-tables
           awslocal dynamodb describe-table --table-name cdk-localstack-table
+
+      - name: Stop LocalStack
+        if: always()
+        run: docker compose down
 
