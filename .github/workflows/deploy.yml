@@ -51,8 +51,8 @@ jobs:
           export AWS_ENDPOINT_URL="http://localhost:4566" 
           export CDK_DEFAULT_ACCOUNT="000000000000"
           export CDK_DEFAULT_REGION="us-east-1"
-          npx cdklocal bootstrap
-          npx cdklocal deploy --require-approval never
+          npx cdklocal bootstrap --verbose
+          npx cdklocal deploy --require-approval never --verbose
 
       - name: Verify deployment
         run: |
