@@ -1,0 +1,45 @@
+name: Deploy CDK to LocalStack
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build CDK
+        run: npm run build
+
+      - name: Start LocalStack
+        run: |
+          docker compose up -d
+          sleep 10
+
+      - name: Deploy to LocalStack
+        run: |
+          npx cdk bootstrap aws://000000000000/us-east-1 --require-approval never
+          npx cdk deploy --require-approval never
+        env:
+          AWS_ACCESS_KEY_ID: test
+          AWS_SECRET_ACCESS_KEY: test
+          AWS_DEFAULT_REGION: us-east-1
+          AWS_ENDPOINT_URL: http://localhost:4566
+
+      - name: Stop LocalStack
+        if: always()
+        run: docker compose down
