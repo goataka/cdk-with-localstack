@@ -21,45 +21,33 @@ jobs:
         with:
           node-version: '22'
 
+      - name: Install CDK
+        run: |
+          npm install -g aws-cdk-local aws-cdk
+          cdklocal --version
+
+      - name: Start LocalStack
+        uses: LocalStack/setup-localstack@main
+        with:
+          image-tag: 'latest'
+          install-awslocal: 'true'
+
       - name: Install dependencies
         run: npm install
 
       - name: Build CDK
         run: npm run build
 
-      - name: Install CDK tools globally
-        run: npm install -g aws-cdk-local aws-cdk
-
-      - name: Start LocalStack
-        run: |
-          docker compose up -d
-          sleep 30
-
-      - name: Wait for LocalStack to be ready
-        run: |
-          echo "Waiting for LocalStack to be ready..."
-          timeout 60 bash -c '
-            until curl -f -s http://localhost:4566/_localstack/health > /dev/null 2>&1; do 
-              echo "LocalStack not ready yet, waiting..."
-              sleep 5
-            done
-          '
-          echo "LocalStack is ready!"
-          curl -s http://localhost:4566/_localstack/health || true
-
       - name: Deploy to LocalStack with CDK
-        run: npx cdklocal deploy --require-approval never
+        run: |
+          export AWS_ACCESS_KEY_ID="test"
+          export AWS_SECRET_ACCESS_KEY="test"
+          export AWS_DEFAULT_REGION="us-east-1"
+          cdklocal bootstrap
+          cdklocal deploy --require-approval never
 
       - name: Verify deployment
         run: |
-          aws --endpoint-url=http://localhost:4566 dynamodb list-tables --region us-east-1
-          aws --endpoint-url=http://localhost:4566 dynamodb describe-table \
-            --table-name cdk-localstack-table --region us-east-1
-        env:
-          AWS_ACCESS_KEY_ID: test
-          AWS_SECRET_ACCESS_KEY: test
-          AWS_DEFAULT_REGION: us-east-1
+          awslocal dynamodb list-tables
+          awslocal dynamodb describe-table --table-name cdk-localstack-table
 
-      - name: Stop LocalStack
-        if: always()
-        run: docker compose down
