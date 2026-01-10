@@ -28,8 +28,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          npm install
           pip install awslocal
+          npm install
 
       - name: Build CDK
         run: npm run build
