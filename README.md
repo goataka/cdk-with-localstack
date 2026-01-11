@@ -46,6 +46,26 @@ npx cdklocal deploy --require-approval never
 docker compose down
 ```
 
+## 注意点
+
+### LocalStackのサービス制限について
+
+`docker-compose.yml`で`SERVICES`環境変数を使ってLocalStackのサービスを制限する場合、`dynamodb`のみに限定しないでください。
+
+**❌ 避けるべき設定例**:
+```yaml
+environment:
+  - SERVICES=dynamodb  # これは動作しません
+```
+
+**理由**: `cdklocal`の認証処理ではSTS（Security Token Service）などの追加サービスが必要です。サービスを制限すると、以下のような分かりづらいエラーが発生します：
+
+```
+Unable to resolve AWS account to use. It must be either configured when you define your CDK Stack, or through the environment
+```
+
+**推奨**: `SERVICES`環境変数を設定せず、LocalStackのデフォルト設定を使用してください。
+
 ## 関連リンク
 
 - [AWS CDK](https://aws.amazon.com/cdk/)
