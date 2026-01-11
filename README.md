@@ -58,7 +58,7 @@ environment:
   - SERVICES=dynamodb  # これは動作しません
 ```
 
-**理由**: `cdklocal`の認証処理ではSTS（Security Token Service）などの追加サービスが必要です。サービスを制限すると、以下のような分かりづらいエラーが発生します：
+**理由**: `cdklocal`の認証処理ではSTS（Security Token Service）などの追加サービスが必要です。サービスを制限すると、以下のようなわかりづらいエラーが発生します：
 
 ```
 Unable to resolve AWS account to use. It must be either configured when you define your CDK Stack, or through the environment
