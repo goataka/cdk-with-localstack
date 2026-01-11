@@ -1,4 +1,4 @@
-name: Deploy CDK to LocalStack (with setup actions)
+name: Deploy CDK to LocalStack
 
 on:
   push:
@@ -26,12 +26,11 @@ jobs:
           node-version: '22'
           cache: 'npm'
 
-      - name: Setup Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Start LocalStack
-        run: |
-          docker compose up -d
+      - name: Setup LocalStack
+        uses: LocalStack/setup-localstack@v0.2.3
+        with:
+          image-tag: 'latest'
+          install-awslocal: 'true'
 
       - name: Install dependencies
         run: |
@@ -39,12 +38,6 @@ jobs:
 
       - name: Build CDK
         run: npm run build
-          
-      - name: Wait LocalStack
-        run: |
-          curl -s http://localhost:4566/_localstack/health \
-            --retry 30 --retry-delay 2 --retry-all-errors | grep -q "available"
-          curl -s http://localhost:4566/_localstack/health | jq . 
 
       - name: Deploy to LocalStack with CDK
         env:
@@ -61,12 +54,6 @@ jobs:
           AWS_SECRET_ACCESS_KEY: "test"
           AWS_DEFAULT_REGION: "ap-northeast-1"
         run: |
-          pip install awscli-local
           awslocal dynamodb list-tables
           awslocal dynamodb describe-table --table-name cdk-localstack-table
-
-      - name: Stop LocalStack
-        if: always()
-        run: |
-          docker compose down
 
