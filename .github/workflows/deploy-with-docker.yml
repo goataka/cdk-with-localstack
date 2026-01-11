@@ -1,0 +1,68 @@
+name: Deploy CDK to LocalStack (with Docker)
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+  
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Start LocalStack
+        run: |
+          docker compose up -d
+
+      - name: Install dependencies
+        run: |
+          npm ci
+
+      - name: Build CDK
+        run: npm run build
+          
+      - name: Wait LocalStack
+        run: |
+          curl -s http://localhost:4566/_localstack/health \
+            --retry 30 --retry-delay 2 --retry-all-errors | grep -q "available"
+          curl -s http://localhost:4566/_localstack/health | jq . 
+
+      - name: Deploy to LocalStack with CDK
+        env:
+          AWS_ACCESS_KEY_ID: "test"
+          AWS_SECRET_ACCESS_KEY: "test"
+          AWS_DEFAULT_REGION: "us-east-1"
+        run: |
+          npx cdklocal bootstrap
+          npx cdklocal deploy --require-approval never
+
+      - name: Verify deployment
+        env:
+          AWS_ACCESS_KEY_ID: "test"
+          AWS_SECRET_ACCESS_KEY: "test"
+          AWS_DEFAULT_REGION: "us-east-1"
+        run: |
+          pip install awscli-local
+          awslocal dynamodb list-tables
+          awslocal dynamodb describe-table --table-name cdk-localstack-table
+
+      - name: Stop LocalStack
+        if: always()
+        run: |
+          docker compose down

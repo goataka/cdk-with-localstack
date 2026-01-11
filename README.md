@@ -1,85 +1,78 @@
 # cdk-with-localstack
 
-CDKのデプロイをLocalStackに行う検証用リポジトリです。
+CDKをLocalStackにデプロイする検証用リポジトリ。
 
-## 構成
+## GitHub Actions ワークフロー
 
-- **CDK**: TypeScriptでDynamoDBテーブルを定義
-- **LocalStack**: Docker Composeで最小限の構成
-- **GitHub Actions**: CDKのビルドとLocalStackの起動確認
+本リポジトリでは2つのデプロイパターンを提供しています：
 
-## 必要要件
+### 1. `deploy-with-setup.yml` (推奨)
 
-- Node.js 22以上
-- Docker
-- Docker Compose
-- AWS CLI
+**アーキテクチャ**: [setup-localstack](https://github.com/localstack/setup-localstack) GitHub Actionを利用した統合アプローチ
 
-## セットアップ
+**特徴**:
+- LocalStackの起動・停止を自動管理
+- `awslocal` CLIの自動インストール
+- ヘルスチェックや手動クリーンアップ不要
+- CI/CD環境での実行を想定した設計
+
+**推奨理由**: LocalStack公式のアクションにより、セットアップが簡素化され、メンテナンス性が向上します。
+
+### 2. `deploy-with-docker.yml`
+
+**アーキテクチャ**: Docker Composeを利用した従来型アプローチ
+
+**特徴**:
+- `docker-compose.yml` を使用して手動でLocalStackを起動
+- ヘルスチェックとクリーンアップ（`docker compose down`）を明示的に実行
+- ローカル開発環境との一貫性を重視
+
+**適用場面**: Docker Composeの動作を細かく制御したい場合や、ローカル環境と同じ構成をCI/CDで再現したい場合に有用です。
+
+## クイックスタート（ローカル開発）
 
 ```bash
-# 依存関係のインストール
+# 依存関係のインストールとビルド
 npm install
-
-# ビルド
 npm run build
-```
 
-## LocalStackの起動
-
-```bash
+# LocalStack起動
 docker compose up -d
-```
 
-## CDKスタックの確認
-
-```bash
-# スタックの合成（テンプレート生成）
-npx cdk synth
-
-# LocalStackにデプロイ（cdklocalを使用）
+# CDKデプロイ
 npx cdklocal deploy --require-approval never
-```
 
-**注意**: LocalStackへのCDKデプロイには適切なAWS認証情報の設定が必要です。
-`.aws/credentials`ファイルに以下を設定してください：
-
-```ini
-[default]
-aws_access_key_id = test
-aws_secret_access_key = test
-```
-
-## LocalStackへの直接デプロイ (AWS CLI)
-
-CDKテンプレートを使用せずに、AWS CLIで直接LocalStackにDynamoDBテーブルを作成：
-
-```bash
-aws --endpoint-url=http://localhost:4566 dynamodb create-table \
-  --table-name cdk-localstack-table \
-  --attribute-definitions AttributeName=id,AttributeType=S \
-  --key-schema AttributeName=id,KeyType=HASH \
-  --provisioned-throughput ReadCapacityUnits=5,WriteCapacityUnits=5 \
-  --region us-east-1
-
-# テーブルの確認
-aws --endpoint-url=http://localhost:4566 dynamodb list-tables --region us-east-1
-```
-
-環境変数を設定する場合：
-```bash
-export AWS_ACCESS_KEY_ID=test
-export AWS_SECRET_ACCESS_KEY=test
-export AWS_DEFAULT_REGION=us-east-1
-```
-
-## LocalStackの停止
-
-```bash
+# LocalStack停止
 docker compose down
 ```
+
+## 注意点
+
+### LocalStackのサービス制限について
+
+`docker-compose.yml`で`SERVICES`環境変数を使ってLocalStackのサービスを制限する場合、`dynamodb`のみに限定しないでください。
+
+**❌ 避けるべき設定例**:
+```yaml
+environment:
+  - SERVICES=dynamodb  # これは動作しません
+```
+
+**理由**: `cdklocal`の認証処理ではSTS（Security Token Service）などの追加サービスが必要です。サービスを制限すると、以下のようなわかりづらいエラーが発生します：
+
+```
+Unable to resolve AWS account to use. It must be either configured when you define your CDK Stack, or through the environment
+```
+
+**推奨**: `SERVICES`環境変数を設定せず、LocalStackのデフォルト設定を使用してください。
+
+## 関連リンク
+
+- [AWS CDK](https://aws.amazon.com/cdk/)
+- [LocalStack](https://localstack.cloud/)
+- [setup-localstack Action](https://github.com/localstack/setup-localstack)
+- [aws-cdk-local](https://github.com/localstack/aws-cdk-local)
 
 ## リソース
 
 - DynamoDBテーブル: `cdk-localstack-table`
-  - パーティションキー: `id` (String)
