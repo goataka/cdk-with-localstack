@@ -24,6 +24,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
+          cache: 'npm'
 
       - name: Start LocalStack
         run: |
@@ -65,4 +66,3 @@ jobs:
         if: always()
         run: |
           docker compose down
-

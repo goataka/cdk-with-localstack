@@ -56,4 +56,3 @@ jobs:
         run: |
           awslocal dynamodb list-tables
           awslocal dynamodb describe-table --table-name cdk-localstack-table
-
