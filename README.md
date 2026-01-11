@@ -2,12 +2,34 @@
 
 CDKをLocalStackにデプロイする検証用リポジトリ。
 
-## 必要要件
+## GitHub Actions ワークフロー
 
-- Node.js 22以上
-- Docker
+本リポジトリでは2つのデプロイパターンを提供しています：
 
-## クイックスタート
+### 1. `deploy-with-setup.yml` (推奨)
+
+**アーキテクチャ**: [setup-localstack](https://github.com/localstack/setup-localstack) GitHub Actionを利用した統合アプローチ
+
+**特徴**:
+- LocalStackの起動・停止を自動管理
+- `awslocal` CLIの自動インストール
+- ヘルスチェックや手動クリーンアップ不要
+- CI/CD環境での実行を想定した設計
+
+**推奨理由**: LocalStack公式のアクションにより、セットアップが簡素化され、メンテナンス性が向上します。
+
+### 2. `deploy-with-docker.yml`
+
+**アーキテクチャ**: Docker Composeを利用した従来型アプローチ
+
+**特徴**:
+- `docker-compose.yml` を使用して手動でLocalStackを起動
+- ヘルスチェックとクリーンアップ（`docker compose down`）を明示的に実行
+- ローカル開発環境との一貫性を重視
+
+**適用場面**: Docker Composeの動作を細かく制御したい場合や、ローカル環境と同じ構成をCI/CDで再現したい場合に有用です。
+
+## クイックスタート（ローカル開発）
 
 ```bash
 # 依存関係のインストールとビルド
@@ -24,12 +46,12 @@ npx cdklocal deploy --require-approval never
 docker compose down
 ```
 
-## GitHub Actions
+## 関連リンク
 
-本リポジトリには2つのワークフローがあります：
-
-- `deploy-with-setup.yml`: [setup-localstack](https://github.com/localstack/setup-localstack)アクションを使用（推奨）
-- `deploy-with-docker.yml`: Docker Composeを使用
+- [AWS CDK](https://aws.amazon.com/cdk/)
+- [LocalStack](https://localstack.cloud/)
+- [setup-localstack Action](https://github.com/localstack/setup-localstack)
+- [aws-cdk-local](https://github.com/localstack/aws-cdk-local)
 
 ## リソース
 
