@@ -7,12 +7,15 @@
   "scripts": {
     "build": "tsc",
     "watch": "tsc -w",
-    "cdk": "cdk"
+    "cdk": "cdk",
+    "deploy:testcontainers": "ts-node bin/deploy-with-testcontainers.ts"
   },
   "devDependencies": {
+    "@testcontainers/localstack": "^11.11.0",
     "@types/node": "22.10.5",
     "aws-cdk": "2.1100.3",
     "aws-cdk-local": "3.0.1",
+    "testcontainers": "^11.11.0",
     "ts-node": "^10.9.2",
     "typescript": "~5.9.3"
   },

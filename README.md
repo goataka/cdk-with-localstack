@@ -34,12 +34,13 @@ CDKをLocalStackにデプロイする検証用リポジトリ。
 **アーキテクチャ**: [Testcontainers](https://testcontainers.com/)を利用したコンテナ管理アプローチ
 
 **特徴**:
-- Testcontainers Cloudを使用してコンテナをプログラマティックに管理
-- `docker run`でLocalStackを直接起動し、より細かい制御が可能
-- 明示的なヘルスチェックとクリーンアップ処理
+- TypeScriptでTestcontainersライブラリを使用してLocalStackを起動
+- `@testcontainers/localstack`パッケージによるプログラマティックなコンテナ管理
+- TypeScriptからCDKのブートストラップとデプロイを実行
+- 自動的なヘルスチェックとクリーンアップ処理
 - Testcontainersエコシステムとの統合
 
-**適用場面**: Testcontainersを既に使用している環境や、コンテナのライフサイクルをより細かく制御したい場合に適しています。
+**適用場面**: Testcontainersを既に使用している環境や、TypeScriptでコンテナのライフサイクルを完全に制御したい場合に適しています。
 
 ## クイックスタート（ローカル開発）
 
