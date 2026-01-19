@@ -1,0 +1,86 @@
+name: Deploy CDK to LocalStack (with Testcontainers)
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Setup Testcontainers Cloud
+        uses: atomicjar/testcontainers-cloud-setup-action@v1
+        with:
+          wait: true
+
+      - name: Start LocalStack with Testcontainers
+        run: |
+          docker run -d \
+            --name localstack \
+            -p 4566:4566 \
+            -e DEBUG=1 \
+            -v /var/run/docker.sock:/var/run/docker.sock \
+            localstack/localstack:latest
+
+          # Wait for LocalStack to be ready
+          for i in {1..30}; do
+            if curl -s http://localhost:4566/_localstack/health \
+                | grep -q "available"; then
+              echo "LocalStack is ready!"
+              break
+            fi
+            echo "Waiting for LocalStack... ($i/30)"
+            sleep 2
+          done
+
+          curl -s http://localhost:4566/_localstack/health | jq .
+
+      - name: Install dependencies
+        run: |
+          npm ci
+
+      - name: Build CDK
+        run: npm run build
+
+      - name: Deploy to LocalStack with CDK
+        env:
+          AWS_ACCESS_KEY_ID: "test"
+          AWS_SECRET_ACCESS_KEY: "test"
+          AWS_DEFAULT_REGION: "us-east-1"
+        run: |
+          npx cdklocal bootstrap
+          npx cdklocal deploy --require-approval never
+
+      - name: Verify deployment
+        env:
+          AWS_ACCESS_KEY_ID: "test"
+          AWS_SECRET_ACCESS_KEY: "test"
+          AWS_DEFAULT_REGION: "us-east-1"
+        run: |
+          pip install awscli-local
+          awslocal dynamodb list-tables
+          awslocal dynamodb describe-table --table-name cdk-localstack-table
+
+      - name: Stop LocalStack
+        if: always()
+        run: |
+          docker stop localstack || true
+          docker rm localstack || true

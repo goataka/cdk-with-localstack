@@ -4,7 +4,7 @@ CDKをLocalStackにデプロイする検証用リポジトリ。
 
 ## GitHub Actions ワークフロー
 
-本リポジトリでは2つのデプロイパターンを提供しています：
+本リポジトリでは3つのデプロイパターンを提供しています：
 
 ### 1. `deploy-with-setup.yml` (推奨)
 
@@ -28,6 +28,18 @@ CDKをLocalStackにデプロイする検証用リポジトリ。
 - ローカル開発環境との一貫性を重視
 
 **適用場面**: Docker Composeの動作を細かく制御したい場合や、ローカル環境と同じ構成をCI/CDで再現したい場合に有用です。
+
+### 3. `deploy-with-testcontainers.yml`
+
+**アーキテクチャ**: [Testcontainers](https://testcontainers.com/)を利用したコンテナ管理アプローチ
+
+**特徴**:
+- Testcontainers Cloudを使用してコンテナをプログラマティックに管理
+- `docker run`でLocalStackを直接起動し、より細かい制御が可能
+- 明示的なヘルスチェックとクリーンアップ処理
+- Testcontainersエコシステムとの統合
+
+**適用場面**: Testcontainersを既に使用している環境や、コンテナのライフサイクルをより細かく制御したい場合に適しています。
 
 ## クイックスタート（ローカル開発）
 
@@ -72,6 +84,8 @@ Unable to resolve AWS account to use. It must be either configured when you defi
 - [LocalStack](https://localstack.cloud/)
 - [setup-localstack Action](https://github.com/localstack/setup-localstack)
 - [aws-cdk-local](https://github.com/localstack/aws-cdk-local)
+- [Testcontainers](https://testcontainers.com/)
+- [Testcontainers Cloud](https://testcontainers.com/cloud/)
 
 ## リソース
 
