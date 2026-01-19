@@ -2,10 +2,17 @@
 import { LocalstackContainer } from "@testcontainers/localstack";
 import { execSync } from "child_process";
 
+// Configuration constants
+const LOCALSTACK_IMAGE = "localstack/localstack:latest";
+const AWS_ACCESS_KEY_ID = "test";
+const AWS_SECRET_ACCESS_KEY = "test";
+const AWS_DEFAULT_REGION = "us-east-1";
+const TABLE_NAME = "cdk-localstack-table";
+
 async function main() {
   console.log("Starting LocalStack with Testcontainers...");
   
-  const localstackContainer = await new LocalstackContainer("localstack/localstack:latest")
+  const localstackContainer = await new LocalstackContainer(LOCALSTACK_IMAGE)
     .withEnvironment({ DEBUG: "1" })
     .start();
 
@@ -14,9 +21,9 @@ async function main() {
 
   try {
     // Set environment variables for AWS CLI and CDK
-    process.env.AWS_ACCESS_KEY_ID = "test";
-    process.env.AWS_SECRET_ACCESS_KEY = "test";
-    process.env.AWS_DEFAULT_REGION = "us-east-1";
+    process.env.AWS_ACCESS_KEY_ID = AWS_ACCESS_KEY_ID;
+    process.env.AWS_SECRET_ACCESS_KEY = AWS_SECRET_ACCESS_KEY;
+    process.env.AWS_DEFAULT_REGION = AWS_DEFAULT_REGION;
     process.env.AWS_ENDPOINT_URL = localstackContainer.getConnectionUri();
 
     console.log("\nBootstrapping CDK...");
@@ -32,12 +39,13 @@ async function main() {
     });
 
     console.log("\nVerifying deployment...");
-    execSync("npx aws --endpoint-url=" + localstackContainer.getConnectionUri() + " dynamodb list-tables", { 
+    const endpoint = localstackContainer.getConnectionUri();
+    execSync(`npx aws --endpoint-url=${endpoint} dynamodb list-tables`, { 
       stdio: "inherit",
       env: process.env
     });
     
-    execSync("npx aws --endpoint-url=" + localstackContainer.getConnectionUri() + " dynamodb describe-table --table-name cdk-localstack-table", { 
+    execSync(`npx aws --endpoint-url=${endpoint} dynamodb describe-table --table-name ${TABLE_NAME}`, { 
       stdio: "inherit",
       env: process.env
     });
