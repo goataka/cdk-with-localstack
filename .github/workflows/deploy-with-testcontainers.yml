@@ -41,17 +41,21 @@ jobs:
             localstack/localstack:latest
 
           # Wait for LocalStack to be ready
+          echo "Waiting for LocalStack to be ready..."
           for i in {1..30}; do
             if curl -s http://localhost:4566/_localstack/health \
                 | grep -q "available"; then
               echo "LocalStack is ready!"
-              break
+              curl -s http://localhost:4566/_localstack/health | jq .
+              exit 0
             fi
             echo "Waiting for LocalStack... ($i/30)"
             sleep 2
           done
 
-          curl -s http://localhost:4566/_localstack/health | jq .
+          echo "ERROR: LocalStack failed to start within timeout period"
+          docker logs localstack
+          exit 1
 
       - name: Install dependencies
         run: |
