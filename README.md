@@ -86,7 +86,6 @@ Unable to resolve AWS account to use. It must be either configured when you defi
 - [setup-localstack Action](https://github.com/localstack/setup-localstack)
 - [aws-cdk-local](https://github.com/localstack/aws-cdk-local)
 - [Testcontainers](https://testcontainers.com/)
-- [Testcontainers Cloud](https://testcontainers.com/cloud/)
 
 ## リソース
 

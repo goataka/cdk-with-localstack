@@ -26,11 +26,6 @@ jobs:
           node-version: '22'
           cache: 'npm'
 
-      - name: Setup Testcontainers Cloud
-        uses: atomicjar/testcontainers-cloud-setup-action@v1
-        with:
-          wait: true
-
       - name: Install dependencies
         run: |
           npm ci
